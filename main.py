@@ -21,7 +21,7 @@ class MazGui:
             for c in range(2):
                 tk.Label(self.window, borderwidth=0).grid(row=r, column=c)
         self.window.columnconfigure(0, weight=1)
-        self.window.rowconfigure(1, weight=1)
+        self.window.rowconfigure(1, weight=3)
         self.orig1 = Image.open("raw_maze.png")
         self.new1 = self.orig1
         self.img1 = ImageTk.PhotoImage(self.orig1, master=self.window)
@@ -42,7 +42,7 @@ class MazGui:
             bg="grey",
             fg="black"
         )
-        self.generate.grid(row=0, column=0, sticky="NSEW", columnspan=2)
+        self.generate.grid(row=0, column=1, sticky="NSEW")
 
         self.window.bind("<Configure>", self.resize_img)
 
