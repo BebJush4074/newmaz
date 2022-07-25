@@ -1,10 +1,6 @@
-use serde::{Serialize, Deserialize};
-use std::path::Path;
+use serde::Serialize;
 use std::{fmt, fs};
-use std::collections::{HashMap, HashSet};
-use std::env::args;
-use std::str::FromStr;
-use std::thread::current;
+use std::collections::HashSet;
 use rand::{Rng, thread_rng};
 
 #[derive(Eq, Hash, PartialEq, Copy, Clone, Serialize)]
@@ -31,13 +27,12 @@ impl Wall {
 struct Cell {
     walls: HashSet<Wall>,
     coords: (u32, u32),
-    in_maze: bool,
 }
 
 impl Cell {
     fn new(coords: (u32, u32)) -> Self {
         let walls = [Wall::Top, Wall::Bottom, Wall::Left, Wall::Right];
-        Cell { walls: HashSet::from(walls), coords, in_maze: false }
+        Cell { walls: HashSet::from(walls), coords }
     }
     fn from(walls: u8) -> Self {
         let mut wallset = HashSet::new();
@@ -53,7 +48,7 @@ impl Cell {
         if walls >> 3 & 1 == 1 {
             wallset.insert(Wall::Right);
         }
-        Cell { walls: wallset, coords: (0, 0), in_maze: false }
+        Cell { walls: wallset, coords: (0, 0) }
     }
     fn to_u8(&self) -> u8 {
         let mut output: u8 = 0x00;
@@ -69,15 +64,11 @@ impl Cell {
             self.walls.remove(&side);
         }
     }
-    fn set_in_maze(&mut self, value: bool) {
-        self.in_maze = value;
-    }
 }
 
 struct Maz {
     value: Vec<u8>,
     size: u32,
-    in_maze: u32,
     in_maze_list: Vec<(u32, u32)>,
     cells: Vec<Cell>,
     to_add: Vec<(u32, u32)>
@@ -117,13 +108,7 @@ impl Maz {
             }
             i = i + 1;
         }
-        Maz { value: val_holder, size, in_maze: 0, in_maze_list: vec![], cells: cell_holder, to_add: vec![]}
-    }
-    fn get_size(&self) -> u32 {
-        self.size
-    }
-    fn is_valid(&self, x: u32, y: u32) -> bool {
-        x > 0 && y > 0 && x < (self.size) && y < (self.size)
+        Maz { value: val_holder, size, in_maze_list: vec![], cells: cell_holder, to_add: vec![]}
     }
     fn get_at(&self, x: u32, y: u32) -> u8 {
         self.value[((&self.size * x) + y) as usize]
@@ -140,32 +125,32 @@ impl Maz {
         self.value[((&self.size * x) + y) as usize] = value;
     }
     fn open_border(&mut self, a: (u32, u32), b: (u32, u32)) {
-        let x1 = a.0 as isize;
-        let x2 = b.0 as isize;
-        let y1 = a.1 as isize;
-        let y2 = b.1 as isize;
+        let y1 = a.0 as isize;
+        let y2 = b.0 as isize;
+        let x1 = a.1 as isize;
+        let x2 = b.1 as isize;
 
-        let val1 = (self.get_cell_at(a.0, a.1) as usize);
+        let val1 = self.get_cell_at(a.0, a.1) as usize;
         let sides1 = self.cells[self.get_cell_at(a.0, a.1)].to_u8();
-        let val2 = (self.get_cell_at(b.0, b.1) as usize);
+        let val2 = self.get_cell_at(b.0, b.1) as usize;
         let sides2 = self.cells[self.get_cell_at(b.0, b.1)].to_u8();
 
-        if x1 - x2 == 1 {
+        if x2 - x1 == 1 {
             self.value[val1] = to_encoded(false, sides1, Wall::Left);
             self.value[val2] = to_encoded(false, sides2, Wall::Right);
             //self.get_cell_at(a.0, a.1).set_wall(false, Wall::Left);
             //self.get_cell_at(b.0, b.1).set_wall(false, Wall::Right);
-        } else if x2  - x1  == 1 {
+        } else if x1  - x2  == 1 {
             self.value[val1] = to_encoded(false, sides1, Wall::Right);
             self.value[val2] = to_encoded(false, sides2, Wall::Left);
             //self.get_cell_at(a.0, a.1).set_wall(false, Wall::Right);
             //self.get_cell_at(b.0, b.1).set_wall(false, Wall::Left);
-        } else if y1  - y2  == 1 {
+        } else if y2  - y1  == 1 {
             self.value[val1] = to_encoded(false, sides1, Wall::Top);
             self.value[val2] = to_encoded(false, sides2, Wall::Bottom);
             //self.get_cell_at(a.0, a.1).set_wall(false, Wall::Top);
             //self.get_cell_at(b.0, b.1).set_wall(false, Wall::Bottom);
-        } else if y2  - y1  == 1 {
+        } else if y1  - y2  == 1 {
             self.value[val1] = to_encoded(false, sides1, Wall::Bottom);
             self.value[val2] = to_encoded(false, sides2, Wall::Top);
             //self.get_cell_at(a.0, a.1).set_wall(false, Wall::Bottom);
@@ -241,7 +226,6 @@ impl Maz {
                             tried.3 = true;
                         }
                     }
-                    _ => panic!("TOO BIG BRO!")
                 };
                 if tried.0 && tried.1 && tried.2 && tried.3 {
                     if prevlist.len() == 0 {
@@ -259,7 +243,7 @@ impl Maz {
                 coords = next_coords;
             } else {
                 self.in_maze_list.push(next_coords);
-                //self.open_border(coords, next_coords);
+                self.open_border(coords, next_coords);
             }
 
             /*match next_side {
@@ -287,9 +271,8 @@ fn to_encoded(value: bool, initial: u8, side: Wall) -> u8 {
 }
 
 fn main() {
-    let mut bobvec: Vec<u8> = Vec::new();
     //let size: u32 = rand::thread_rng().gen_range(2..41);
-    let size= 300;
+    let size= 30;
     let mut bob = Maz::new(size);
     bob.generate();
 

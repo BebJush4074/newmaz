@@ -1,1 +1,1 @@
-/home/liam/Desktop/mazdes/rustmaz/target/release/rustmaz: /home/liam/Desktop/mazdes/rustmaz/src/main.rs
+C:\Users\lgleason\Desktop\mazdes\rustmaz\target\release\rustmaz.exe: C:\Users\lgleason\Desktop\mazdes\rustmaz\src\main.rs
