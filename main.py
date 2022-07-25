@@ -24,14 +24,14 @@ class MazGui:
         self.window.rowconfigure(1, weight=1)
         self.orig1 = Image.open("raw_maze.png")
         self.new1 = self.orig1
-        self.img1 = ImageTk.PhotoImage(self.orig1)
+        self.img1 = ImageTk.PhotoImage(self.orig1, master=self.window)
         self.frame1 = tk.Label(self.window, image=self.img1)
         self.frame1.grid(row=1, column=0, sticky="NSEW")
 
         self.window.columnconfigure(1, weight=1)
         self.orig2 = Image.open("processed_maze.png")
         self.new2 = self.orig2
-        self.img2 = ImageTk.PhotoImage(self.orig2)
+        self.img2 = ImageTk.PhotoImage(self.orig2, master=self.window)
         self.frame2 = tk.Label(self.window, image=self.img2)
         self.frame2.grid(row=1, column=1, sticky="NSEW")
 
@@ -45,6 +45,34 @@ class MazGui:
         self.generate.grid(row=0, column=0, sticky="NSEW", columnspan=2)
 
         self.window.bind("<Configure>", self.resize_img)
+
+        self.color = 'gray_r'
+
+        self.curr_color = tk.StringVar(self.window)
+        self.curr_color.set('gray_r')
+
+        colors = ['Accent', 'Accent_r', 'Blues', 'Blues_r', 'BrBG', 'BrBG_r', 'BuGn', 'BuGn_r', 'BuPu', 'BuPu_r',
+                  'CMRmap', 'CMRmap_r', 'Dark2', 'Dark2_r', 'GnBu', 'GnBu_r', 'Greens', 'Greens_r', 'Greys', 'Greys_r',
+                  'OrRd', 'OrRd_r', 'Oranges', 'Oranges_r', 'PRGn', 'PRGn_r', 'Paired', 'Paired_r', 'Pastel1',
+                  'Pastel1_r', 'Pastel2', 'Pastel2_r', 'PiYG', 'PiYG_r', 'PuBu', 'PuBuGn', 'PuBuGn_r', 'PuBu_r', 'PuOr',
+                  'PuOr_r', 'PuRd', 'PuRd_r', 'Purples', 'Purples_r', 'RdBu', 'RdBu_r', 'RdGy', 'RdGy_r', 'RdPu',
+                  'RdPu_r', 'RdYlBu', 'RdYlBu_r', 'RdYlGn', 'RdYlGn_r', 'Reds', 'Reds_r', 'Set1', 'Set1_r', 'Set2',
+                  'Set2_r', 'Set3', 'Set3_r', 'Spectral', 'Spectral_r', 'Wistia', 'Wistia_r', 'YlGn', 'YlGnBu',
+                  'YlGnBu_r', 'YlGn_r', 'YlOrBr', 'YlOrBr_r', 'YlOrRd', 'YlOrRd_r', 'afmhot', 'afmhot_r', 'autumn',
+                  'autumn_r', 'binary', 'binary_r', 'bone', 'bone_r', 'brg', 'brg_r', 'bwr', 'bwr_r', 'cividis',
+                  'cividis_r', 'cool', 'cool_r', 'coolwarm', 'coolwarm_r', 'copper', 'copper_r', 'cubehelix',
+                  'cubehelix_r', 'flag', 'flag_r', 'gist_earth', 'gist_earth_r', 'gist_gray', 'gist_gray_r',
+                  'gist_heat', 'gist_heat_r', 'gist_ncar', 'gist_ncar_r', 'gist_rainbow', 'gist_rainbow_r',
+                  'gist_stern', 'gist_stern_r', 'gist_yarg', 'gist_yarg_r', 'gnuplot', 'gnuplot2', 'gnuplot2_r',
+                  'gnuplot_r', 'gray', 'gray_r', 'hot', 'hot_r', 'hsv', 'hsv_r', 'inferno', 'inferno_r', 'jet', 'jet_r',
+                  'magma', 'magma_r', 'nipy_spectral', 'nipy_spectral_r', 'ocean', 'ocean_r', 'pink', 'pink_r',
+                  'plasma', 'plasma_r', 'prism', 'prism_r', 'rainbow', 'rainbow_r', 'seismic', 'seismic_r', 'spring',
+                  'spring_r', 'summer', 'summer_r', 'tab10', 'tab10_r', 'tab20', 'tab20_r', 'tab20b', 'tab20b_r',
+                  'tab20c', 'tab20c_r', 'terrain', 'terrain_r', 'turbo', 'turbo_r', 'twilight', 'twilight_r',
+                  'twilight_shifted', 'twilight_shifted_r', 'viridis', 'viridis_r', 'winter', 'winter_r']
+
+        dropdown = tk.OptionMenu(self.window, self.curr_color, *colors)
+        dropdown.grid(row=0, column=0, sticky="NSEW")
 
     def resize_img(self, event):
         height = int((self.window.winfo_height()) * (2 / 3))
@@ -64,14 +92,16 @@ class MazGui:
         self.frame2.config(image=self.img2)
 
     def gen(self):
+        self.color = self.curr_color.get()
         prev = os.getcwd()
         os.chdir('.\\rustmaz')
         subprocess.call('cargo run -r')
         os.chdir(prev)
-        gen_imgs()
+        gen_imgs(self.color)
         self.orig1 = Image.open("raw_maze.png")
         self.orig2 = Image.open("processed_maze.png")
         self.resize_img(event=None)
+
 
 class Side(IntEnum):
     TOP = 0
@@ -80,7 +110,7 @@ class Side(IntEnum):
     RIGHT = 3
 
 
-def gen_imgs():
+def gen_imgs(color):
     picklefile = open('./rustmaz/currmaze.mazdat', 'rb')
     marks = pickle.load(picklefile)
     picklefile.close()
@@ -117,7 +147,7 @@ def gen_imgs():
 
         print()
 
-    plt.imshow(new_arr, interpolation='nearest', cmap='gray_r', vmin=0, vmax=15)
+    plt.imshow(new_arr, interpolation='nearest', cmap=color, vmin=0, vmax=15)
     plt.axis('off')
     plt.savefig('raw_maze.png', bbox_inches='tight', pad_inches=0, dpi=300)
 
@@ -130,7 +160,7 @@ def gen_imgs():
 
 
 def main():
-    gen_imgs()
+    gen_imgs('gray_r')
     window = tk.Tk()
     myapp = MazGui(window)
     window.mainloop()
