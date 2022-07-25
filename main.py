@@ -15,7 +15,7 @@ class Side(IntEnum):
 
 
 def main():
-    picklefile = open('./rustmaz/data.txt', 'rb')
+    picklefile = open('./rustmaz/currmaze.mazdat', 'rb')
     marks = pickle.load(picklefile)
     picklefile.close()
 
@@ -52,11 +52,11 @@ def main():
 
         print()
 
-    plt.imshow(new_arr, interpolation='nearest', cmap='twilight_shifted', vmin=0, vmax=15)
+    plt.imshow(new_arr, interpolation='nearest', cmap='gray', vmin=0, vmax=15)
     plt.axis('off')
     plt.savefig('raw_maze.png', bbox_inches='tight', pad_inches=0)
 
-    plt.imshow(big_arr, interpolation='nearest', cmap='twilight_shifted', vmin=0, vmax=32)
+    plt.imshow(big_arr, interpolation='nearest', cmap='gray', vmin=0, vmax=32)
     plt.axis('off')
     plt.savefig('processed_maze.png', bbox_inches='tight', pad_inches=0)
 

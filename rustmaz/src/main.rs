@@ -307,5 +307,5 @@ fn main() {
     println!("{:#04b}", bob.cells[0].to_u8());
     let bobser = serde_pickle::to_vec(&bob.value, Default::default()).unwrap();
 
-    fs::write("./data.txt", &bobser).unwrap();
+    fs::write("./currmaze.mazdat", &bobser).unwrap();
 }
