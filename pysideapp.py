@@ -1,18 +1,13 @@
-import subprocess
-import pickle
-import sys
-import random
-import os
 import math
-import time
+import os
+import pickle
+import subprocess
+import sys
+import rustmaz
 from enum import IntEnum
-import PySide6
-from PySide2.QtWidgets import QTextEdit
-from PySide6 import QtCore, QtWidgets, QtGui
+
 import numpy as np
-from PySide6.QtCore import *
-from PySide6.QtGui import *
-from PySide6.QtWidgets import *
+from PySide6 import QtCore, QtWidgets, QtGui
 from matplotlib import pyplot as plt
 from numpy import uint8
 
@@ -44,9 +39,9 @@ class Side(IntEnum):
 
 
 def gen_imgs(color):
-    picklefile = open('./rustmaz/currmaze.mazdat', 'rb')
-    marks = pickle.load(picklefile)
-    picklefile.close()
+    marks = rustmaz.startup()
+    # marks = pickle.load(picklefile)
+    # picklefile.close()
 
     print(marks)
     print(type(marks))
@@ -143,9 +138,7 @@ class MyApp(QtWidgets.QWidget):
 
     def gen(self):
         prev = os.getcwd()
-        os.chdir('.\\rustmaz')
-        subprocess.call('cargo run -r')
-        os.chdir(prev)
+
         gen_imgs(self.color)
         if self.height() > self.width():
             im_size = self.width() / 2
@@ -174,6 +167,7 @@ class MyApp(QtWidgets.QWidget):
 
 
 def main():
+    prev = os.getcwd()
     # gen_imgs('gray_r')
     app = QtWidgets.QApplication([])
 

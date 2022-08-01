@@ -2,6 +2,7 @@ use serde::Serialize;
 use std::{fmt, fs};
 use std::collections::HashSet;
 use rand::{Rng, thread_rng};
+use pyo3::prelude::*;
 
 #[derive(Eq, Hash, PartialEq, Copy, Clone, Serialize)]
 enum Wall {
@@ -71,8 +72,7 @@ struct Maz {
     size: usize,
     in_maze_list: Vec<(usize, usize)>,
     cells: Vec<Cell>,
-    to_add: Vec<(usize, usize)>,
-    to_add_ref: Vec<(usize, usize)>
+    to_add: Vec<(usize, usize)>
 
 }
 
@@ -109,102 +109,83 @@ impl Maz {
             }
             i = i + 1;
         }
-        Maz { value: val_holder, size, in_maze_list: vec![], cells: cell_holder, to_add: vec![], to_add_ref: vec![]}
+        Maz { value: val_holder, size, in_maze_list: vec![], cells: cell_holder, to_add: vec![]}
     }
     fn generate(&mut self) {
         let mut coords= (0, 0);
         let mut prevlist: Vec<(usize, usize)> = vec![];
-        let mut tried = (false, false, false, false);
         loop {
-            tried = (false, false, false, false);
             if self.to_add.contains(&coords) {
-                let mut curr_index = self.get_index_of_cell_ta(coords.0, coords.1)
-                self.to_add.remove(curr_index);
-                self.to_add_ref.remove(curr_index);
+                self.to_add.remove(self.to_add.len() - 1);
             }
-            if coords.1 > 0 &&
-                !self.in_maze_list.contains(&(coords.0, coords.1 - 1)) &&
-                !self.to_add.contains(&(coords.0, coords.1 - 1)){
-                self.to_add.push((coords.0, coords.1 - 1));
-                self.to_add_ref.push(coords);
-            } else {
-                tried.0 = true;
-            }
-            if coords.1 + 1 < self.size &&
-                !self.in_maze_list.contains(&(coords.0, coords.1 + 1)) &&
-                !self.to_add.contains(&(coords.0, coords.1 + 1)) {
-                self.to_add.push((coords.0, coords.1 + 1));
-                self.to_add_ref.push(coords);
-            } else {
-                tried.1 = true;
-            }
-            if coords.0 > 0 &&
-                !self.in_maze_list.contains(&(coords.0 - 1, coords.1)) &&
-                !self.to_add.contains(&(coords.0 - 1, coords.1)) {
-                self.to_add.push((coords.0 - 1, coords.1));
-                self.to_add_ref.push(coords);
-            } else {
-                tried.2 = true;
-            }
-            if coords.0 + 1 < self.size &&
-                !self.in_maze_list.contains(&(coords.0 + 1, coords.1)) &&
-                !self.to_add.contains(&(coords.0 + 1, coords.1)) {
-                self.to_add.push((coords.0 + 1, coords.1));
-                self.to_add_ref.push(coords);
-            } else {
-                tried.3 = true;
-            }
-            let mut ran = rand::thread_rng().gen_range(0..self.to_add.len());
-            coords = self.to_add[ran];
+            let mut next_side = Wall::from_u8(random_side());
+            let mut next_coords = coords;
+            let mut tried = (false, false, false, false);
+            loop {
+                match next_side {
+                    Wall::Top => {
+                        if !tried.0 && coords.1 as i64 - 1 >= 0 &&
+                            !self.to_add.contains(&(coords.0, coords.1 - 1)) &&
+                            !self.in_maze_list.contains(&(coords.0, coords.1 - 1)){
+                            next_coords = (coords.0, coords.1 - 1);
+                            self.to_add.push(next_coords);
+                            break;
+                        } else {
+                            next_side = Wall::from_u8(random_side());
+                            tried.0 = true;
+
+                        }
+                    }
+                    Wall::Bottom => {
+                        if !tried.1 &&
+                            &coords.1 + 1 < self.size &&
+                            !self.to_add.contains(&(coords.0, coords.1 + 1)) &&
+                            !self.in_maze_list.contains(&(coords.0, coords.1 + 1)){
+                            next_coords = (coords.0, coords.1 + 1);
+                            self.to_add.push(next_coords);
+                            break;
+                        } else {
+                            next_side = Wall::from_u8(random_side());
+                            tried.1 = true;
+                        }
+                    }
+                    Wall::Left => {
+                        if !tried.2 &&
+                            coords.0 as i64 - 1 >= 0 &&
+                            !self.to_add.contains(&(coords.0 - 1, coords.1)) &&
+                            !self.in_maze_list.contains(&(coords.0 - 1, coords.1)) {
+                            next_coords = (coords.0 - 1, coords.1);
+                            self.to_add.push(next_coords);
+                            break;
+                        } else {
+                            next_side = Wall::from_u8(random_side());
+                            tried.2 = true;
+                        }
+                    }
+                    Wall::Right => {
+                        if !tried.3 &&
+                            &coords.0 + 1 < self.size &&
+                            !self.to_add.contains(&(coords.0 + 1, coords.1)) &&
+                            !self.in_maze_list.contains(&(coords.0 + 1, coords.1)){
+                            next_coords = (coords.0 + 1, coords.1);
+                            self.to_add.push(next_coords);
+                            break;
+                        } else {
+                            next_side = Wall::from_u8(random_side());
+                            tried.3 = true;
+                        }
+                    }
+                };
                 if tried.0 && tried.1 && tried.2 && tried.3 {
                     if prevlist.len() == 0 {
                         return;
                     }
-                } else {
+                    coords = *prevlist.last().unwrap();
+                    prevlist.remove(prevlist.len() - 1);
                     break;
                 }
             }
-        let mut next_side = random_side();
-        let mut next_coords = coords;
-        loop {
-            match next_side {
-                Wall::Top => {
-                    if self.to_add.contains() {
-                        next_coords = (coords.0, coords.1 - 1);
-                        break;
-                    } else {
-                        next_side = random_side();
-                    }
-                }
-                Wall::Bottom => {
-                    if !tried.1 {
-                        next_coords = (coords.0, coords.1 + 1);
-                        break;
-                    } else {
-                        next_side = random_side();
-                    }
-                }
-                Wall::Left => {
-                    if !tried.2 {
-                        next_coords = (coords.0 - 1, coords.1);
-                        break;
-                    } else {
-                        next_side = random_side();
-                    }
-                }
-                Wall::Right => {
-                    if !tried.3 {
-                        next_coords = (coords.0 + 1, coords.1);
-                        break;
-                    } else {
-                        next_side = random_side();
-                    }
-                }
-            };
-
-            self.coords = self.to_add_ref[self.get_index_of_cell_ta(next_coords.0, next_coords.1)];
-
-            if !self.in_maze_list.contains(&next_coords) {
+            if !self.in_maze_list.contains(&next_coords) && !(tried.0 && tried.1 && tried.2 && tried.3) {
                 self.in_maze_list.push(coords);
                 self.open_border(coords, next_coords);
                 prevlist.push(coords);
@@ -224,17 +205,9 @@ impl Maz {
     fn set_value_at(&mut self, x: usize, y: usize, value: u8) {
         self.value[((&self.size * x) + y) as usize] = value;
     }
-    fn get_index_of_cell_im(&self, x: usize, y: usize) -> usize {
+    fn get_index_of_cell_at(&self, x: usize, y: usize) -> usize {
         for cell in 0..self.cells.len() {
             if self.cells[cell].coords == (x, y) {
-                return cell
-            }
-        }
-        0
-    }
-    fn get_index_of_cell_ta(&self, x: usize, y: usize) -> usize {
-        for cell in 0..self.to_add.len() {
-            if self.to_add[cell] == (x, y) {
                 return cell
             }
         }
@@ -246,10 +219,10 @@ impl Maz {
         let x1 = a.1 as isize;
         let x2 = b.1 as isize;
 
-        let val1 = self.get_index_of_cell_im(a.0, a.1) as usize;
-        let sides1 = self.cells[self.get_index_of_cell_im(a.0, a.1)].to_u8();
-        let val2 = self.get_index_of_cell_im(b.0, b.1) as usize;
-        let sides2 = self.cells[self.get_index_of_cell_im(b.0, b.1)].to_u8();
+        let val1 = self.get_index_of_cell_at(a.0, a.1) as usize;
+        let sides1 = self.cells[self.get_index_of_cell_at(a.0, a.1)].to_u8();
+        let val2 = self.get_index_of_cell_at(b.0, b.1) as usize;
+        let sides2 = self.cells[self.get_index_of_cell_at(b.0, b.1)].to_u8();
 
         if x2 - x1 == 1 {
             self.value[val1] = to_encoded(false, sides1, Wall::Left);
@@ -267,8 +240,8 @@ impl Maz {
     }
 }
 
-fn random_side() -> Wall {
-    Wall::from_u8(thread_rng().gen_range((Wall::Top as u8)..(Wall::Right as u8) + 1))
+fn random_side() -> u8 {
+    thread_rng().gen_range((Wall::Top as u8)..(Wall::Right as u8) + 1)
 }
 
 fn to_encoded(value: bool, initial: u8, side: Wall) -> u8 {
@@ -277,7 +250,14 @@ fn to_encoded(value: bool, initial: u8, side: Wall) -> u8 {
     temp.to_u8()
 }
 
-fn main() {
+#[pymodule]
+pub fn rustmaz(py: Python, module: &PyModule) -> PyResult<()> {
+    module.add_wrapped(wrap_pyfunction!(startup))?;
+    Ok(())
+}
+
+#[pyfunction]
+pub fn startup() -> Vec<u8> {
     //let size: usize = rand::thread_rng().gen_range(2..41);
     let size= 30;
     let mut bob = Maz::new(size);
@@ -295,7 +275,7 @@ fn main() {
 
     println!("{:?}", bob);
     println!("{:#04b}", bob.cells[0].to_u8());
-    let bobser = serde_pickle::to_vec(&bob.value, Default::default()).unwrap();
-
-    fs::write("./currmaze.mazdat", &bobser).unwrap();
+    //let bobser = serde_pickle::to_vec(&bob.value, Default::default()).unwrap();
+    //fs::write("./currmaze.mazdat", &bobser).unwrap();
+    bob.value
 }
