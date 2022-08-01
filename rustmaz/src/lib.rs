@@ -1,10 +1,9 @@
-use serde::Serialize;
 use std::{fmt, fs};
 use std::collections::HashSet;
 use rand::{Rng, thread_rng};
 use pyo3::prelude::*;
 
-#[derive(Eq, Hash, PartialEq, Copy, Clone, Serialize)]
+#[derive(Eq, Hash, PartialEq, Copy, Clone)]
 enum Wall {
     Top = 0,
     Bottom = 1,
