@@ -6,12 +6,20 @@ import pickle
 import subprocess
 import sys
 import rustmaz
+import matplotlib
 from enum import IntEnum
+
+# TODO - https://www.pythonguis.com/tutorials/pyside-plotting-matplotlib/
 
 import numpy as np
 from PySide6 import QtCore, QtWidgets, QtGui
 from matplotlib import pyplot as plt
 from numpy import uint8
+
+matplotlib.use('Qt5Agg')
+
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
+from matplotlib.figure import Figure
 
 colors = ['Accent', 'Accent_r', 'Blues', 'Blues_r', 'BrBG', 'BrBG_r', 'BuGn', 'BuGn_r', 'BuPu', 'BuPu_r',
           'CMRmap', 'CMRmap_r', 'Dark2', 'Dark2_r', 'GnBu', 'GnBu_r', 'Greens', 'Greens_r', 'Greys', 'Greys_r',
@@ -38,6 +46,18 @@ class Side(IntEnum):
     BOTTOM = 1
     LEFT = 2
     RIGHT = 3
+
+
+class MplCanvas(FigureCanvasQTAgg):
+    def __init__(self, parent=None, width=5, height=4, dpi=100):
+        if self.height() > self.width():
+            im_size = self.width() / 2
+        elif self.width() > self.height():
+            im_size = self.height() * (2 / 3)
+        else:
+            im_size = self.height()
+        fig = Figure(figsize=(im_size, im_size), dpi=dpi)
+        super(MplCanvas, self).__init__(fig)
 
 
 def gen_imgs(color):
