@@ -1,5 +1,3 @@
-# TODO - Checkout Streamlit and Abstra
-
 import math
 import os
 import pickle
@@ -10,6 +8,8 @@ import matplotlib
 from enum import IntEnum
 
 # TODO - https://www.pythonguis.com/tutorials/pyside-plotting-matplotlib/
+# TODO - Checkout Streamlit and Abstra
+
 
 import numpy as np
 from PySide6 import QtCore, QtWidgets, QtGui
