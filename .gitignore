@@ -2,4 +2,4 @@
 **/data.txt
 **/.png
 **/*.mazdat
-/venv
+venv/
